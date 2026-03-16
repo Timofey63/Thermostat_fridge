@@ -1,0 +1,49 @@
+button {
+    font-size: 3em;
+    padding: 10px;
+    margin: 5px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+h3 {
+    font-size: 3em;
+    font-family: Arial, sans-serif;
+}
+
+.row {
+    display: flex;
+    align-items: center;   /* выравнивание по вертикали */
+    margin: 10px 0;
+}
+
+.label {
+    font-size: 2em;
+    margin-right: 15px;    /* расстояние между текстом и инпутом */
+    width: 100px;           /* одинаковая ширина для выравнивания */
+    text-align: right;     /* текст выровнен справа */
+}
+
+input[type="text"] {
+    font-size: 3em; 
+    text-align: center;
+     width: 250px;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 50vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+}

@@ -37,11 +37,40 @@ int currentTemp;
 
 bool compressorActive = false;
 
+String tempHistory[10];
+int historyIndex = 0;
+int historyCount = 0; 
+
+void addTempToHistory(int temp) 
+{
+    String newRecord = String(historyCount + 1) + ") " + String(temp);
+    
+    if (historyCount >= 10) 
+    {
+      for (int i = 0; i < 9; i++) 
+      {
+        tempHistory[i] = tempHistory[i + 1];
+        int spacePos = tempHistory[i].indexOf(')');
+        if (spacePos > 0) 
+        {
+          tempHistory[i] = String(i + 1) + tempHistory[i].substring(spacePos);
+        }
+      }
+      tempHistory[9] = newRecord;
+    } 
+    else 
+    {
+      tempHistory[historyCount] = newRecord;
+      historyCount++;
+    }
+}
+
 int getTempSensor()
 {
   sensors.requestTemperatures();
   float tempC = sensors.getTempCByIndex(0);
   currentTemp = tempC;
+  addTempToHistory(currentTemp);
   return tempC;
 }
 
@@ -62,7 +91,6 @@ void updateFridge()
     }
   }
   
-
   if (compressorActive == false)
   {
     // warm
@@ -91,34 +119,9 @@ void printOled()
 
 void handleRoot()
 {
-  Serial.println("=== handleRoot called ===");
-
-  // Проверяем, смонтирована ли файловая система
-  if (!LittleFS.begin(false))
-  { // false = не форматировать автоматически
-    Serial.println("LittleFS not mounted!");
-    server.send(500, "text/plain", "LittleFS not mounted");
-    return;
-  }
-
-  // Проверяем, есть ли файл
   if (!LittleFS.exists("/index.html"))
   {
     Serial.println("index.html not found!");
-
-    // Выводим список всех файлов для диагностики
-    Serial.println("Files in LittleFS:");
-    File root = LittleFS.open("/");
-    File file = root.openNextFile();
-    while (file)
-    {
-      Serial.print("  ");
-      Serial.print(file.name());
-      Serial.print(" - ");
-      Serial.println(file.size());
-      file = root.openNextFile();
-    }
-
     server.send(500, "text/plain", "index.html not found");
     return;
   }
@@ -204,6 +207,12 @@ void handleApi()
   doc["tempOff"] = TEMP_OFF;
   doc["tempInterval"] = TEMP_INTERVAL;
 
+  JsonArray history = doc["history"].to<JsonArray>();
+  for (int i = 0; i < historyCount; i++) 
+  {
+    history.add(tempHistory[i]);
+  }
+
   String response;
   serializeJson(doc, response);
   server.send(200, "application/json", response);
@@ -236,6 +245,7 @@ void handleSendText2()
   {
     String value2 = server.arg("value2");
     TEMP_INTERVAL = value2.toInt();
+    TEMP_ON = TEMP_OFF + TEMP_INTERVAL;
     prefs.putInt("temp_interval", TEMP_INTERVAL);
 
     Serial.print("Update interval set to: ");
@@ -250,8 +260,15 @@ void handleSendText2()
   }
 }
 
+void updateWeb()
+{
+  server.handleClient();
+  dnsServer.processNextRequest();
+}
+
 timerCallback ledTimer(updateFridge, TIME_UPDATE);
 timerCallback oledTimer(printOled, 1000);
+timerCallback webTimer(updateWeb, 10);
 
 void setup()
 {
@@ -266,6 +283,16 @@ void setup()
   displayOled.begin();
 
   getTempSensor();
+
+
+  if (!LittleFS.begin()) 
+  {
+    while (1)
+    {
+      Serial.println("LittleFS mount failed");
+      delay(1000);
+    }
+  }
 
   WiFi.softAP(ssid, password);
   IPAddress apIP = WiFi.softAPIP();
@@ -290,8 +317,5 @@ void loop()
 {
   ledTimer.loop();
   oledTimer.loop();
-  server.handleClient();
-  dnsServer.processNextRequest();
-
-  delay(10);
+  webTimer.loop();
 }

@@ -9,7 +9,7 @@
 #include <Preferences.h>
 
 #include <timerCallback.h>
-#include <displayOled.hpp>
+//#include <displayOled.hpp>
 
 Preferences prefs;
 
@@ -20,7 +20,7 @@ const byte DNS_PORT = 53;
 DNSServer dnsServer;
 WebServer server(80);
 
-DisplayOled displayOled(5, 6);
+//DisplayOled displayOled(5, 6);
 
 const int ONE_WIRE_BUS = 10;
 OneWire oneWire(ONE_WIRE_BUS);
@@ -112,10 +112,10 @@ void updateFridge()
   digitalWrite(LED_PIN, compressorActive ? LOW : HIGH);
 }
 
-void printOled()
-{
-  displayOled.print(ssid, password, currentTemp);
-}
+// void printOled()
+// {
+//   displayOled.print(ssid, password, currentTemp);
+// }
 
 void handleRoot()
 {
@@ -267,7 +267,7 @@ void updateWeb()
 }
 
 timerCallback ledTimer(updateFridge, TIME_UPDATE);
-timerCallback oledTimer(printOled, 1000);
+//timerCallback oledTimer(printOled, 1000);
 timerCallback webTimer(updateWeb, 10);
 
 void setup()
@@ -280,7 +280,7 @@ void setup()
   TEMP_INTERVAL = prefs.getInt("temp_interval", 2);
   TEMP_ON = TEMP_OFF + TEMP_INTERVAL;
 
-  displayOled.begin();
+  //displayOled.begin();
 
   getTempSensor();
 
@@ -316,6 +316,6 @@ void setup()
 void loop()
 {
   ledTimer.loop();
-  oledTimer.loop();
+  //oledTimer.loop();
   webTimer.loop();
 }

@@ -9,7 +9,7 @@
 #include <Preferences.h>
 
 #include <timerCallback.h>
-#include <displayOled.hpp>
+//#include <displayOled.hpp>
 
 Preferences prefs;
 
@@ -20,7 +20,7 @@ const byte DNS_PORT = 53;
 DNSServer dnsServer;
 WebServer server(80);
 
-DisplayOled displayOled(5, 6);
+//DisplayOled displayOled(5, 6);
 
 const int ONE_WIRE_BUS = 10;
 OneWire oneWire(ONE_WIRE_BUS);
@@ -37,32 +37,26 @@ int currentTemp;
 
 bool compressorActive = false;
 
-String tempHistory[10];
-int historyIndex = 0;
-int historyCount = 0; 
+String tempHistory[36];
+int historyCount = 0;
 
 void addTempToHistory(int temp) 
 {
-    String newRecord = String(historyCount + 1) + ") " + String(temp);
-    
-    if (historyCount >= 10) 
+  String newRecord = String(temp);
+  
+  if (historyCount >= 36) 
+  {
+    for (int i = 0; i < 35; i++) 
     {
-      for (int i = 0; i < 9; i++) 
-      {
-        tempHistory[i] = tempHistory[i + 1];
-        int spacePos = tempHistory[i].indexOf(')');
-        if (spacePos > 0) 
-        {
-          tempHistory[i] = String(i + 1) + tempHistory[i].substring(spacePos);
-        }
-      }
-      tempHistory[9] = newRecord;
-    } 
-    else 
-    {
-      tempHistory[historyCount] = newRecord;
-      historyCount++;
+      tempHistory[i] = tempHistory[i + 1];
     }
+    tempHistory[35] = newRecord;
+  } 
+  else 
+  {
+    tempHistory[historyCount] = newRecord;
+    historyCount++;
+  }
 }
 
 int getTempSensor()
@@ -112,10 +106,10 @@ void updateFridge()
   digitalWrite(LED_PIN, compressorActive ? LOW : HIGH);
 }
 
-void printOled()
-{
-  displayOled.print(ssid, password, currentTemp);
-}
+// void printOled()
+// {
+//   displayOled.print(ssid, password, currentTemp);
+// }
 
 void handleRoot()
 {
@@ -206,6 +200,8 @@ void handleApi()
   doc["currentTemp"] = currentTemp;
   doc["tempOff"] = TEMP_OFF;
   doc["tempInterval"] = TEMP_INTERVAL;
+  doc["timeUpdate"] = TIME_UPDATE / 60000;
+  doc["maxRuntime"] = maxCompresorRuntime / 60000;
 
   JsonArray history = doc["history"].to<JsonArray>();
   for (int i = 0; i < historyCount; i++) 
@@ -260,6 +256,47 @@ void handleSendText2()
   }
 }
 
+void handleSendText3()
+{
+  if (server.hasArg("value3"))
+  {
+    String value3 = server.arg("value3");
+    TIME_UPDATE = value3.toInt() * 60 * 1000;
+    prefs.putLong("time_update", TIME_UPDATE);
+    
+    Serial.print("Time update set to: ");
+    Serial.print(value3);
+    Serial.println(" minutes");
+    
+    server.send(200, "text/plain", "OK");
+  }
+  else
+  {
+    server.send(400, "text/plain", "Value not received");
+  }
+}
+
+void handleSendText4()
+{
+  if (server.hasArg("value4"))
+  {
+    String value4 = server.arg("value4");
+    maxCompresorRuntime = value4.toInt() * 60 * 1000;
+    maxRuntime = maxCompresorRuntime / TIME_UPDATE;
+    prefs.putLong("max_runtime", maxCompresorRuntime);
+    
+    Serial.print("Max runtime set to: ");
+    Serial.print(value4);
+    Serial.println(" minutes");
+    
+    server.send(200, "text/plain", "OK");
+  }
+  else
+  {
+    server.send(400, "text/plain", "Value not received");
+  }
+}
+
 void updateWeb()
 {
   server.handleClient();
@@ -267,7 +304,7 @@ void updateWeb()
 }
 
 timerCallback ledTimer(updateFridge, TIME_UPDATE);
-timerCallback oledTimer(printOled, 1000);
+//timerCallback oledTimer(printOled, 1000);
 timerCallback webTimer(updateWeb, 10);
 
 void setup()
@@ -280,8 +317,11 @@ void setup()
   TEMP_INTERVAL = prefs.getInt("temp_interval", 2);
   TEMP_ON = TEMP_OFF + TEMP_INTERVAL;
 
-  displayOled.begin();
+  TIME_UPDATE = prefs.getLong("time_update", 5 * 60 * 1000);
+  maxCompresorRuntime = prefs.getLong("max_runtime", 30 * 60 * 1000);
+  maxRuntime = maxCompresorRuntime / TIME_UPDATE;
 
+  //displayOled.begin();
   getTempSensor();
 
 
@@ -308,7 +348,10 @@ void setup()
   server.on("/api", handleApi);
   server.on("/sendText", HTTP_GET, [](){
     if (server.hasArg("value1")) handleSendText1();
-    if (server.hasArg("value2")) handleSendText2(); });
+    if (server.hasArg("value2")) handleSendText2(); 
+    if (server.hasArg("value3")) handleSendText3();
+    if (server.hasArg("value4")) handleSendText4();
+  });
 
   server.begin();
 }
@@ -316,6 +359,6 @@ void setup()
 void loop()
 {
   ledTimer.loop();
-  oledTimer.loop();
+  //oledTimer.loop();
   webTimer.loop();
 }

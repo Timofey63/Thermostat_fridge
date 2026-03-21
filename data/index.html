@@ -11,8 +11,6 @@
 <body>
     <h3>Current temperature: <span id="status">...</span></h3>
 
-    <!-- <button onclick="setLed(true)">ВКЛЮЧИТЬ</button>
-    <button onclick="setLed(false)">ВЫКЛЮЧИТЬ</button> -->
     <div class="row">
         <span class="label">Temp off:</span>
         <input type="text" id="textInput" placeholder="-15">
@@ -24,6 +22,20 @@
         <span class="label">Interval:</span>
         <input type="text" id="textInput2" placeholder="2">
         <button onclick="sendText2()">Send</button>
+    </div>
+    <br>
+    <br>
+    <div class="row">
+        <span class="label">Time update (m) TODO:</span>
+        <input type="text" id="textInput3" placeholder="5">
+        <button onclick="sendText3()">Send</button>
+    </div>
+    <br>
+    <br>
+    <div class="row">
+        <span class="label">Max runtime (m):</span>
+        <input type="text" id="textInput4" placeholder="30">
+        <button onclick="sendText4()">Send</button>
     </div>
     <br>
     <br>

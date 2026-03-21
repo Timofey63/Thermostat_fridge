@@ -27,7 +27,7 @@ h3 {
 .label {
     font-size: 2em;
     margin-right: 15px;    /* расстояние между текстом и инпутом */
-    width: 100px;           /* одинаковая ширина для выравнивания */
+    width: 300px;           /* одинаковая ширина для выравнивания */
     text-align: right;     /* текст выровнен справа */
 }
 
@@ -40,10 +40,53 @@ input[type="text"] {
 body {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    /* justify-content: center; */
     align-items: center;
-    height: 50vh;
+    min-height: 100vh;
     margin: 0;
     font-family: Arial, sans-serif;
     background-color: #f0f0f0;
+}
+
+.history h2 {
+    font-size: 2.5em;
+    margin: 10px 0;
+    color: #000000;
+}
+
+.history {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#historyList {
+    margin-top: 20px;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    width: 90vw;           /* Фиксированная ширина относительно окна */
+    max-width: 1200px;     /* Максимальная ширина */
+    overflow: auto;        /* ВКЛЮЧАЕМ ПРОКРУТКУ */
+    -webkit-overflow-scrolling: touch;
+}
+
+#historyList::-webkit-scrollbar {
+    height: 8px;
+}
+
+#historyList::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#historyList::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+#historyList::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
